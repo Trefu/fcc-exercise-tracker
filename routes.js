@@ -27,23 +27,29 @@ router.post('/api/users', async (req, res, next) => {
 })
 
 router.post('/api/users/:id/exercises', async (req, res, next) => {
+    const { id } = req.params;
     try {
-        const { id } = req.params;
         const user = await User.findById(id);
-        const newExercise = new Exercise;
+        if (!user) return res.status(500).send('no hay usuario')
+        const newExercise = new Exercise();
+        if (!req.body.description || !req.body.duration || isNaN(req.body.duration)) {
+            return res.status(500).send('error')
+        }
         newExercise.description = req.body.description;
         newExercise.duration = req.body.duration;
-        req.body.date ? newExercise.date = req.body.date
-            : console.log("no date");
+        req.body.date ? newExercise.date = req.body.date : newExercise.date;
         user.exercises.push(newExercise);
-        const userSaved = await user.save()
-        res.json(userSaved);
+        const userSaved = await user.save();
+        res.json({
+            _id: userSaved.id,
+            username: userSaved.username,
+            date: newExercise.date,
+            duration: newExercise.duration,
+            description: newExercise.description
+        });
 
-        res.end('llego')
-    }
-    catch (e) {
-        console.log(e)
-        return res.end('error')
+    } catch (error) {
+        res.status(500).send(error)
     }
 })
 
