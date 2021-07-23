@@ -16,14 +16,24 @@ router.get('/api/users', async (req, res, next) => {
 
 router.get('/api/users/:id/logs', async (req, res, next) => {
     const { id } = req.params;
+    const { from, to, limit } = req.query;
+    //from to = dates in YYYY-MM-DD format
     try {
         const user = await User.findById(id);
-        console.log(user)
-        const logs = {
-            _id: user._id,
-            username: user.username,
-            count: user.log.length,
-            log: user.log
+        let logs = {};
+        logs._id = user._id
+        logs.username = user.username;
+        logs.count = user.log.length;
+        logs.log = user.log;
+        if (from && to) {
+            const fromDate = new Date(from);
+            const toDate = new Date(to);
+            logs.log = user.log.filter(exer => exer.date.getTime() >= fromDate.getTime() && exer.date.getTime() < toDate.getTime())
+        }
+        console.log(logs.log)
+        if (limit) {
+            logs.log = user.log.slice(0, limit)
+            logs.count = logs.log.length
         }
         console.log(logs)
         res.json(logs)
